@@ -1,0 +1,63 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: spinnaker-demo
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ui-deployment
+  namespace: spinnaker-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: reddit
+      component: ui 
+  template:
+    metadata:
+      name: ui
+      labels:
+        app: reddit
+        component: ui 
+    spec:
+      containers:
+      - image: czm41k/ui:latest
+        name: ui
+        ports:
+        - containerPort: 9292
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ui
+  namespace: spinnaker-demo
+  labels:
+    app: reddit
+    component: ui
+spec:
+  type: NodePort
+  ports:  
+  - port: 9292
+    protocol: TCP
+    targetPort: 9292
+  selector:
+    app: reddit
+    component: ui
+---
+# stub controller, for real controller look at reddit-ingress
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: ui
+  namespace: spinnaker-demo
+  annotations:
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  tls:
+  - secretName: ui-ingress
+  backend:
+    serviceName: ui
+    servicePort: 9292
+...
